@@ -13,7 +13,7 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 class con{
-	constructor(){
+	constructor(opt){
 		if(window.con_impl)return
 		window.con_impl=this
 		var dc=function(name,option){
@@ -28,10 +28,10 @@ class con{
 		}
 		var gfx=dc("canvas").getContext("2d")
 		gfx.font="10px sans-serif"
-		var timer,focus=false
+		var timer,focus=false,tipsel
 		var hisix=0
 		var his=this.history=[]
-		var wnd=this.wnd=dc("div")
+		var wnd=this.wnd=dc("div",{style:"max-height:"+(opt&&opt.height?opt.height:"300px")+";overflow-y:auto"})
 		var ctrl=this.wnd=dc("div",{style:"position:absolute;right:0;display:flex;top:0;pointer:default"})
 		var minbtn=this.wnd=dc("div")
 		var closebtn=this.wnd=dc("div",{text:"x"})
@@ -41,6 +41,7 @@ class con{
 		var input=this.wnd=dc("input",{style:"width:100%;border:0;background-color:#0000;color:#fff;flex-grow:1;outline:none;font:10px sans-serif"})
 		var cmd=this.wnd=dc("div",{children:[note,tip,input],style:"display:flex"})
 		var main=this.main=this.wnd=dc("div",{children:[wnd,cmd,ctrl],style:"position:fixed;bottom:0;min-height:22px;text-shadow: #000 1px 1px;right:0;left:0;color:white;font-size:small"})
+		tip.style.display="none"
 		document.body.appendChild(main)
 		function trie(obj,search){
 			if(!obj)return
@@ -50,6 +51,7 @@ class con{
 			return matchs
 		}
 		var autohide=_=>{
+			if(!opt||!opt.autohide)
 			if(timer){clearTimeout(timer);timer=null}
 			if(focus)return
 			timer=setTimeout(_=>{wnd.style.display="none"}, 3000)
@@ -65,6 +67,10 @@ class con{
 		}
 		input.onkeypress=_=>{
 			if(_.keyCode==13){
+				if(tipsel){
+					tipsel.click()
+					return
+				}
 				try{
 					log("> "+input.value)
 					var s=eval(input.value)
@@ -72,6 +78,7 @@ class con{
 					if(!(his.length>0&&his[his.length-1]==input.value))
 						his.push(input.value)
 					input.value=""
+					input.focus()
 				}catch(err){
 					log(err)
 				}
@@ -79,6 +86,7 @@ class con{
 		}
 		input.oninput=_=>{
 			tip.style.display="none"
+			tipsel=null
 			if(input.value=="")return
 			var m=input.value.match(/[$_a-zA-Z]+[$_a-z0-9.]*$/)
 			if(!m)return
@@ -97,10 +105,15 @@ class con{
 								if(pos>-1)input.value=input.value.substr(0,pos+1)+this.textContent
 								else input.value=this.textContent
 								this.parentNode.style.display="none"
+								tipsel=null
+								input.focus()
 							}
 							tip.append(t)
 						}
 						if(matchs.length>0){
+							tipsel=tip.firstElementChild
+							tipsel.style.backgroundColor="#00e"
+							tipsel.style.color="white"
 							tip.style.display="block"
 							tip.style.left=(gfx.measureText(input.value).width+9.648)+"px"
 						}
@@ -111,6 +124,31 @@ class con{
 			}catch{}
 		}
 		input.onkeydown=_=>{
+            if(_.keyCode==9){event.preventDefault()}
+			if(tipsel){
+				switch(_.keyCode){
+					case 38:
+						if(tipsel.previousElementSibling){
+							tipsel.style.backgroundColor="inherit"
+							tipsel.style.color="inherit"
+							tipsel=tipsel.previousElementSibling
+							tipsel.style.backgroundColor="#00e"
+							tipsel.style.color="white"
+						}
+						event.preventDefault()
+						break
+					case 40:
+						if(tipsel.nextElementSibling){
+							tipsel.style.backgroundColor="inherit"
+							tipsel.style.color="inherit"
+							tipsel=tipsel.nextElementSibling
+							tipsel.style.backgroundColor="#00e"
+							tipsel.style.color="white"
+						}
+						event.preventDefault()
+						break
+				}
+			}
 			if(input.value==""){
 				if(his.length==0)return
 				switch(_.keyCode){
@@ -120,29 +158,20 @@ class con{
 				}
 			}
 		}
-		openbtn.onpointerdown=_=>{
-		}
-		closebtn.onpointerdown=_=>{
-		}
 		window.log=function(){
 			var line=dc("div")
 			line.textContent=[...arguments].join(" ")
 			wnd.appendChild(line)
 			autohide()
+			wnd.lastElementChild.scrollIntoView()
+		}
+		window.onerror=function(err,url,no){
+			log(err+" - "+url)
 		}
 		setInterval(_=>{
-			for(var i=0;i<logm.childElementCount-5000;i++){
-				logm.firstChild.remove()
+			for(var i=0;i<wnd.childElementCount-5000;i++){
+				wnd.firstChild.remove()
 			}
 		},1000)
-
 	}
-}
-onload=function(){
-	document.body.onpointerdown=_=>{
-		document.body.style.backgroundColor="#"+Math.random().toString().substr(2,6)
-	}
-	new con()
-	for(var i=0;i<30;i++)
-		log(Math.random())
 }
