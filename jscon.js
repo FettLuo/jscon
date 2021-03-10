@@ -1,5 +1,5 @@
 
-// Copyright 2021 fyter/fett
+// Copyright [yyyy] [name of copyright owner]
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ class con{
 				if(option.children)for(var c of option.children)t.append(c)
 				if(option.style)t.setAttribute("style",option.style)
 			}
+            t.style.border=t.style.margin=t.style.padding="0"
 			return t
 		}
 		var gfx=dc("canvas").getContext("2d")
@@ -40,14 +41,15 @@ class con{
 		var tip=this.wnd=dc("div",{style:"position:absolute;background-color:#333;bottom:20px;left:9.648;border:1px solid #555;padding:1px;max-height:200px;overflow-y:auto;"})
 		var input=this.wnd=dc("input",{style:"width:100%;border:0;background-color:#0000;color:#fff;flex-grow:1;outline:none;font:10px sans-serif"})
 		var cmd=this.wnd=dc("div",{children:[note,tip,input],style:"display:flex"})
-		var main=this.main=this.wnd=dc("div",{children:[wnd,cmd,ctrl],style:"position:fixed;bottom:0;min-height:22px;text-shadow: #000 1px 1px;right:0;left:0;color:white;font-size:small"})
+		var main=this.main=this.wnd=dc("div",{children:[wnd,cmd,ctrl],style:"position:fixed;bottom:0;min-height:20px;text-shadow:#000 1px 1px;right:0;left:0;color:white;font-size:small"})
+        if(opt.bgcolor)main.style.backgroundColor=opt.bgcolor
 		tip.style.display="none"
 		document.body.appendChild(main)
 		function trie(obj,search){
 			if(!obj)return
-			var keys=Object.getOwnPropertyNames(obj)
-			var matchs=[]
-			for(var k of keys)if(k.substr(0,search.length)==search)matchs.push(k)
+			var matchs=new Set()
+			for(var k in obj)if(k.substr(0,search.length).toLowerCase()==search.toLowerCase())matchs.add(k)
+			for(var k of Object.getOwnPropertyNames(obj.__proto__))if(k.substr(0,search.length).toLowerCase()==search.toLowerCase())matchs.add(k)
 			return matchs
 		}
 		var autohide=_=>{
@@ -88,7 +90,7 @@ class con{
 			tip.style.display="none"
 			tipsel=null
 			if(input.value=="")return
-			var m=input.value.match(/[$_a-zA-Z]+[$_a-z0-9.]*$/)
+			var m=input.value.match(/([$_\w]+[$_\w\d]*\.?)*$/)
 			if(!m)return
 			tip.innerHTML=""
 			var frags=m[0].split(".")
@@ -110,7 +112,7 @@ class con{
 							}
 							tip.append(t)
 						}
-						if(matchs.length>0){
+						if(matchs.size>0){
 							tipsel=tip.firstElementChild
 							tipsel.style.backgroundColor="#00e"
 							tipsel.style.color="white"
@@ -134,6 +136,7 @@ class con{
 							tipsel=tipsel.previousElementSibling
 							tipsel.style.backgroundColor="#00e"
 							tipsel.style.color="white"
+                            tipsel.scrollIntoView()
 						}
 						event.preventDefault()
 						break
@@ -144,9 +147,13 @@ class con{
 							tipsel=tipsel.nextElementSibling
 							tipsel.style.backgroundColor="#00e"
 							tipsel.style.color="white"
+                            tipsel.scrollIntoView()
 						}
 						event.preventDefault()
 						break
+                    case 9:
+                        tipsel.click()
+                        break
 				}
 			}
 			if(input.value==""){
