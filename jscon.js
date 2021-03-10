@@ -20,6 +20,7 @@ class con{
 			var t=document.createElement(name)
 			if(option){
 				if(option.text)t.textContent=option.text
+				if(option.html)t.innerHTML=option.html
 				if(option.child)t.append(option.child)
 				if(option.children)for(var c of option.children)t.append(c)
 				if(option.style)t.setAttribute("style",option.style)
@@ -43,13 +44,24 @@ class con{
 		var cmd=this.wnd=dc("div",{children:[note,tip,input],style:"display:flex"})
 		var main=this.main=this.wnd=dc("div",{children:[wnd,cmd,ctrl],style:"position:fixed;bottom:0;min-height:20px;text-shadow:#000 1px 1px;right:0;left:0;color:white;font-size:small"})
         if(opt.bgcolor)main.style.backgroundColor=opt.bgcolor
+        input.setAttribute("spellcheck","false")
 		tip.style.display="none"
 		document.body.appendChild(main)
 		function trie(obj,search){
 			if(!obj)return
 			var matchs=new Set()
-			for(var k in obj)if(k.substr(0,search.length).toLowerCase()==search.toLowerCase())matchs.add(k)
-			for(var k of Object.getOwnPropertyNames(obj.__proto__))if(k.substr(0,search.length).toLowerCase()==search.toLowerCase())matchs.add(k)
+			for(var k in obj){
+                var pos=k.toLowerCase().indexOf(search.toLowerCase())
+                if(pos==-1)continue
+                var r=k.substr(0,pos)+"<b>"+k.substr(pos,search.length)+"</b>"+k.substr(pos+search.length)
+                matchs.add(r)
+            }
+			for(var k of Object.getOwnPropertyNames(obj.__proto__)){
+                var pos=k.toLowerCase().indexOf(search.toLowerCase())
+                if(pos==-1)continue
+                var r=k.substr(0,pos)+"<b>"+k.substr(pos,search.length)+"</b>"+k.substr(pos+search.length)
+                matchs.add(r)
+            }
 			return matchs
 		}
 		var autohide=_=>{
@@ -101,7 +113,7 @@ class con{
 					if(last==i){
 						var matchs=trie(curobj,frags[i])
 						for(var m of matchs){
-							var t=dc("div",{text:m})
+							var t=dc("div",{html:m})
 							t.onclick=function(){
 								var pos=input.value.lastIndexOf(".")
 								if(pos>-1)input.value=input.value.substr(0,pos+1)+this.textContent
