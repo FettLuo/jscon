@@ -1,6 +1,7 @@
 # jscon
 Provide console for in-page.  
 Implement execution code, error or exception display, intelligent prompting.  
+Preview in [fyter.cn](https://fyter.cn/con.htm)
 
 # Features
 Excute javascript language  
